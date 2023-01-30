@@ -2,13 +2,17 @@
 class DecodeError(Exception):
     pass
 
+
 class ChunkError(Exception):
     pass
+
+
 class BitList:
     def __init__(self, data):
         for ch in data:
             if ch not in ('0', '1'):
-                raise ValueError('Format is invalid; does not consist of only 0 and 1')
+                raise ValueError(
+                    'Format is invalid; does not consist of only 0 and 1')
         self.bits = data
 
     def __eq__(self, other):
@@ -19,7 +23,8 @@ class BitList:
         bits = ''.join(str(bit) for bit in args)
         for char in bits:
             if char not in ('0', '1'):
-                raise ValueError('Format is invalid; does not consist of only 0 and 1')
+                raise ValueError(
+                    'Format is invalid; does not consist of only 0 and 1')
         return BitList(bits)
 
     def __str__(self):
@@ -34,7 +39,8 @@ class BitList:
 
     def bitwise_and(self, other):
         if len(self.bits) != len(other.bits):
-            raise ValueError('a bitwise and can only be performed if both sequences of bits are of equal length')
+            raise ValueError(
+                'a bitwise and can only be performed if both sequences of bits are of equal length')
         result = ''
         for i in range(len(self.bits)):
             if self.bits[i] == '1' and other.bits[i] == '1':
@@ -43,6 +49,7 @@ class BitList:
                 result += '0'
         return BitList(result)
 
+    
     def chunk(self, chunk_length):
         if chunk_length <= 0:
             raise ChunkError('Chunk length should be greater than 0')
@@ -50,7 +57,7 @@ class BitList:
             raise ChunkError('Chunk length should divide the bit length evenly')
         chunks = [self.bits[i:i+chunk_length] for i in range(0, len(self.bits), chunk_length)]
         return [[int(bit) for bit in chunk] for chunk in chunks]
-    
+
     def decode(self, encoding='utf-8'):
         if encoding not in ('us-ascii', 'utf-8'):
             raise ValueError('unsupported encoding')
@@ -64,27 +71,28 @@ class BitList:
             leading_byte = self.bits[i:i+8]
             leading_byte_int = int(leading_byte, 2)
             num_bytes = 1
-            if leading_byte_int >= 0b10000000:
-                if leading_byte_int >= 0b11000000:
+            if leading_byte[0] != '0':
+                if leading_byte[:3] == '110':
                     num_bytes = 2
-                elif leading_byte_int >= 0b11100000:
+                elif leading_byte[:4] == '1110':
                     num_bytes = 3
-                elif leading_byte_int >= 0b11110000:
+                elif leading_byte[:5] == '11110':
                     num_bytes = 4
                 else:
                     raise DecodeError('invalid leading byte')
-
                 if i + 8*num_bytes > len(self.bits):
                     raise DecodeError('incomplete sequence')
-
                 for j in range(1, num_bytes):
                     continuation_byte = self.bits[i+8*j:i+8*j+8]
                     if continuation_byte[0:2] != '10':
                         raise DecodeError('invalid continuation byte')
 
-                decoded += chr(int(self.bits[i:i+8*num_bytes], 2))
+                temp = [self.bits[i:i+8] for i in range (0, len(self.bits), 8)]
+                f = bytes([int(ele,2) for ele in temp])
+                decoded = f.decode('utf-8')
                 i += 8 * num_bytes
             else:
                 decoded += chr(leading_byte_int)
                 i += 8
         return decoded
+
