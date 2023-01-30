@@ -2,10 +2,8 @@
 class DecodeError(Exception):
     pass
 
-
 class ChunkError(Exception):
     pass
-
 
 class BitList:
     def __init__(self, data):
