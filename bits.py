@@ -85,7 +85,9 @@ class BitList:
                     if continuation_byte[0:2] != '10':
                         raise DecodeError('invalid continuation byte')
                 temp = [self.bits[i:i+8] for i in range (0, len(self.bits), 8)]
+                print(temp)
                 f = bytes([int(ele,2) for ele in temp])
+                print(f)
                 decoded = f.decode('utf-8')
                 i += 8 * num_bytes
             else:
@@ -93,3 +95,5 @@ class BitList:
                 i += 8
         return decoded
 
+b = BitList('11110000100111111001100010000010')
+print(b.decode('utf-8'))
